@@ -25,6 +25,13 @@ const walk = (dir, files = []) => {
 	return files;
 };
 
+const InitItem = _ => {
+	let Item = {};
+	Item["Alias"] = '';
+	Item["Content"] = '';
+	return Item;
+}
+
 const MakeStrAltern = Str => {
 	let New = '';
 	for (let i = 0; i < Str.length; i++) {
@@ -33,12 +40,6 @@ const MakeStrAltern = Str => {
 		}
 	}
 	return New;
-}
-
-const MakeBaseHash = Data => {
-	//let Hash = MakeStrAltern(Buffer.from(md5(Data).substring(0,24), 'hex').toString('base64'));
-	let Hash = MakeStrAltern(md5(Data).substring(0,24));
-	return Hash;
 }
 
 const FlattenStr = Str => {
@@ -51,51 +52,56 @@ const FlattenStr = Str => {
 }
 
 const DoHashContent = (Content, Pad) => {
-	return MakeBaseHash(FlattenStr(Content) + " ".repeat(Pad));
+	let Hash = MakeStrAltern(md5(FlattenStr(Content) + " ".repeat(Pad)).substring(0,24));
+	//let HashB64 = Buffer.from(Hash, 'hex').toString('base64');
+	return Hash;
 }
 
-const StoreItem = (Content, Title) => {
-	if (Content != '') {
+const StoreItem = Item => {
+	if (Item["Content"] != '') {
+		Item["Alias"] = Item["Alias"].trim();
+		Item["Content"] = Item["Content"].trim();
 		let Pad = 0;
-		let Hash = DoHashContent(Content, Pad);
+		let Hash = DoHashContent(Item["Content"], Pad);
 		while (Hash in Items) { // If item with same hash is already present, retry with pad
 			Pad++;
-			Hash = DoHashContent(Content, Pad);
+			Hash = DoHashContent(Item["Content"], Pad);
 		}
 		Items[Hash] = {
-			"Title": Title,
-			"Content": Content,
-			"HTML": marked.parse(Content)
+			"Alias": ((Item["Alias"] != '') ? Item["Alias"].split(' ') : []), // Alias strings to reach the content without the real hash
+			"Title": Item["Title"],
+			"Content": Item["Content"],
+			"HTML": marked.parse(Item["Content"])
 		};
 	}
 }
 
 const DoParseFile = Data => {
-	let Item = {},
-	    Title = '',
-	    Content = '';
-	let FoundItem = false,
-	    ParsedMeta = false;
+	let Item = InitItem();
+	let ParsedMeta = false;
 	let Lines = Data.trim().split('\n');
 	for (let i = 0; i < Lines.length; i++) {
 		let Line = Lines[i];
 		let LineTrim = Line.trim();
 		if (LineTrim.startsWith('# ')) { // Title of new item
-			StoreItem(Content.trim(), Title); // Store previous item (if exists)
-			Title = LineTrim.substring(2);
+			StoreItem(Item); // Store previous item (if exists)
+			Item = InitItem();
+			Item["Title"] = LineTrim.substring(2);
 		} else if (LineTrim.startsWith('// ') && !ParsedMeta) { // Meta line
 			let MetaLine = LineTrim.substring(3).toLowerCase();
-			if (MetaLine.startsWith('// Alias ')) {
-				// Add alias to item dict
-			}
+			['Alias'].forEach(function(i) {
+				if (MetaLine.startsWith(i.toLowerCase() + ' ')) {
+					Item[i] = MetaLine.substring(i.length+1);
+				}
+			});
 			if (!Lines[i+1].trim().startsWith('// ')) { // End of meta lines
 				ParsedMeta = true;
 			}
 		} else {
-			Content += Line + '\n';
+			Item["Content"] += Line + '\n';
 		}
 	}
-	StoreItem(Content.trim(), Title); // Store last item
+	StoreItem(Item); // Store last item
 };
 
 const ParseFiles = _ => {
@@ -116,7 +122,7 @@ const Main = _ => {
 	ParseFiles();
 	console.log(Items);
 	Object.keys(Items).forEach(function(Key) {
-		console.log(Key);
+		//console.log(Key);
 	});
 	if (!fs.existsSync('public')){
 		fs.mkdirSync('public');
