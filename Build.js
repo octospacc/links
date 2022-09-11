@@ -1,7 +1,8 @@
 const fs = require('fs');
 const path = require('path');
-const marked = require('./marked.min.js');
-const md5 = require('./md5.min.js');
+const marked = require('./Libs/marked.min.js');
+const md5 = require('./Libs/md5.min.js');
+const similarity = require('./Libs/string-similarity.min.js');
 
 var Items = {},
     OldItems = {};
@@ -40,14 +41,17 @@ const MakeBaseHash = Data => {
 	return Hash;
 }
 
-const DoHashContent = (Content, Pad) => {
-	let Clean = '';
-	let Lines = Content.trim().split('\n');
+const FlattenStr = Str => {
+	let Flat = '';
+	let Lines = Str.trim().split('\n');
 	for (let i = 0; i < Lines.length; i++) {
-		Clean += Lines[i].trim() + '\n';
+		Flat += Lines[i].trim() + '\n';
 	}
-	Clean += " ".repeat(Pad);
-	return MakeBaseHash(Clean);
+	return Flat;
+}
+
+const DoHashContent = (Content, Pad) => {
+	return MakeBaseHash(FlattenStr(Content) + " ".repeat(Pad));
 }
 
 const StoreItem = (Content, Title) => {
@@ -67,7 +71,7 @@ const StoreItem = (Content, Title) => {
 }
 
 const DoParseFile = Data => {
-	let Hash = '',
+	let Item = {},
 	    Title = '',
 	    Content = '';
 	let FoundItem = false,
@@ -79,13 +83,14 @@ const DoParseFile = Data => {
 		if (LineTrim.startsWith('# ')) { // Title of new item
 			StoreItem(Content.trim(), Title); // Store previous item (if exists)
 			Title = LineTrim.substring(2);
-		/*
-		} else if (LineTrim.startsWith('// ') and !ParsedMeta) { // Meta line
-			let MetaLine = LineTrim.substring(3);
+		} else if (LineTrim.startsWith('// ') && !ParsedMeta) { // Meta line
+			let MetaLine = LineTrim.substring(3).toLowerCase();
+			if (MetaLine.startsWith('// Alias ')) {
+				// Add alias to item dict
+			}
 			if (!Lines[i+1].trim().startsWith('// ')) { // End of meta lines
 				ParsedMeta = true;
 			}
-		*/
 		} else {
 			Content += Line + '\n';
 		}
@@ -105,11 +110,19 @@ const ParseFiles = _ => {
 }
 
 const Main = _ => {
+	if (fs.existsSync('Old.json')){
+		OldItems = JSON.parse(fs.readFileSync(Files[i], 'utf8'));
+	}
 	ParseFiles();
 	console.log(Items);
 	Object.keys(Items).forEach(function(Key) {
 		console.log(Key);
 	});
+	if (!fs.existsSync('public')){
+		fs.mkdirSync('public');
+	}
+	fs.writeFileSync('public/Data.json', JSON.stringify(Items, null, '\t'));
+	fs.writeFileSync('public/Data.min.json', JSON.stringify(Items));
 };
 
 Main();
