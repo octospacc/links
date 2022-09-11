@@ -3,9 +3,12 @@ const path = require('path');
 const marked = require('./marked.min.js');
 const md5 = require('./md5.min.js');
 
+var Items = {},
+    OldItems = {};
+
 // Hash formats:
-// Base: md5 string //truncated to 24 chars (12 bytes)
-// Base64: Base hash converted to base64 and alternated + prepend "!" (final 9 chars)
+// Base: md5 string truncated to 24 chars and alternated (final 6 bytes)
+// Base64: Base hash converted to base64 + prepend "!" (final 9 chars)
 
 // https://stackoverflow.com/a/73594511
 const walk = (dir, files = []) => {
@@ -33,37 +36,40 @@ const MakeStrAltern = Str => {
 
 const MakeBaseHash = Data => {
 	//let Hash = MakeStrAltern(Buffer.from(md5(Data).substring(0,24), 'hex').toString('base64'));
-	let Hash = md5(Data)//.substring(0,24);
-	//console.log(Hash);
+	let Hash = MakeStrAltern(md5(Data).substring(0,24));
 	return Hash;
 }
 
-const DoHashContent = (Content, Append) => {
+const DoHashContent = (Content, Pad) => {
 	let Clean = '';
 	let Lines = Content.trim().split('\n');
 	for (let i = 0; i < Lines.length; i++) {
 		Clean += Lines[i].trim() + '\n';
 	}
-	Clean += Append;
+	Clean += " ".repeat(Pad);
 	return MakeBaseHash(Clean);
 }
 
 const StoreItem = (Content, Title) => {
-	let Items = {};
 	if (Content != '') {
-		Items[DoHashContent(Content)] = {
+		let Pad = 0;
+		let Hash = DoHashContent(Content, Pad);
+		while (Hash in Items) { // If item with same hash is already present, retry with pad
+			Pad++;
+			Hash = DoHashContent(Content, Pad);
+		}
+		Items[Hash] = {
 			"Title": Title,
-			"Content": Content
+			"Content": Content,
+			"HTML": marked.parse(Content)
 		};
 	}
-	return Items;
 }
 
 const DoParseFile = Data => {
 	let Hash = '',
 	    Title = '',
-	    Content = ''
-	    Items = {};
+	    Content = '';
 	let FoundItem = false,
 	    ParsedMeta = false;
 	let Lines = Data.trim().split('\n');
@@ -71,8 +77,7 @@ const DoParseFile = Data => {
 		let Line = Lines[i];
 		let LineTrim = Line.trim();
 		if (LineTrim.startsWith('# ')) { // Title of new item
-			//Hash = TryHashContent(Content); // Store previous item
-			Object.assign(Items, StoreItem(Content.trim(), Title));
+			StoreItem(Content.trim(), Title); // Store previous item (if exists)
 			Title = LineTrim.substring(2);
 		/*
 		} else if (LineTrim.startsWith('// ') and !ParsedMeta) { // Meta line
@@ -85,37 +90,26 @@ const DoParseFile = Data => {
 			Content += Line + '\n';
 		}
 	}
-	//Hash = TryHashContent(Content); // Store last item
-	Object.assign(Items, StoreItem(Content.trim(), Title));
-	return Items;
+	StoreItem(Content.trim(), Title); // Store last item
 };
 
 const ParseFiles = _ => {
-	let Items = {};
 	let Files = walk('Data');
 	for (let i = 0; i < Files.length; i++) {
 		let File = Files[i].toLowerCase();
 		if (File.endsWith('.md') ||  File.endsWith('.markdown')) {
-			fs.readFile(Files[i], 'utf8', (Err, Data) => {
-				if (Err) {
-					console.error(Err);
-					return;
-				}
-				Object.assign(Items, DoParseFile(Data));
-				//console.log(Data);
-				//console.log(marked.parse(Data));
-			});
+			let Data = fs.readFileSync(Files[i], 'utf8');
+			DoParseFile(Data);
 		}
 	}
-	return Items;
 }
 
-
-
 const Main = _ => {
-	let Items = {};
-	Items = ParseFiles();
+	ParseFiles();
 	console.log(Items);
+	Object.keys(Items).forEach(function(Key) {
+		console.log(Key);
+	});
 };
 
 Main();
