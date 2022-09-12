@@ -2,10 +2,11 @@ const fs = require('fs');
 const path = require('path');
 const marked = require('./Libs/marked.min.js');
 const md5 = require('./Libs/md5.min.js');
-const similarity = require('./Libs/string-similarity.min.js');
+const strsim = require('./Libs/string-similarity.min.js');
 
 var Items = {},
-    OldItems = {};
+    OldItems = {},
+    OldItemsContent = [];
 
 // Hash formats:
 // Base: md5 string truncated to 24 chars and alternated (final 6 bytes)
@@ -51,7 +52,61 @@ const FlattenStr = Str => {
 	return Flat;
 }
 
-const DoHashContent = (Content, Pad) => {
+const GetMatchableContent = Item => {
+	if (!"Content" in Item) return;
+	let Content = Item["Content"];
+	if (Content == '') return;
+	if ("Title" in Item) {
+		if (Item["Title"] != '') {
+			Content = '# ' + Item["Title"] + '\n\n' + Content;
+		}
+	}
+	return Content;
+}
+
+const FindPermaHash = Item => {
+	let Match = strsim.findBestMatch(GetMatchableContent(Item), OldItemsContent).bestMatch.target;
+	let Key = FindOldItemsKey(Match);
+	console.log(Match, Key)
+	if ("PermaHash" in OldItems[Key]) {
+		let PermaHash = OldItems[Key]["PermaHash"];
+		if (PermaHash != '') return PermaHash;
+	}
+	return Key;
+}
+
+const MakeOldItemsContentList = _ => {
+	Object.values(OldItems).forEach(function(Item) {
+		OldItemsContent = OldItemsContent.concat([GetMatchableContent(Item)]);
+	/*
+		if (!"Content" in OldItems[Key]) {
+			return;
+		}
+		let Str = OldItems[Key]["Content"];
+		if (Str == '') {
+			return;
+		}
+		if ("Title" in OldItems[Key]) {
+			Str = '# ' + OldItems[Key]["Title"] + '\n\n' + Str;
+		}
+		OldItemsContent = OldItemsContent.concat([Str]);
+	*/
+	});
+}
+
+const FindOldItemsKey = Content => {
+	//let Key;
+	let Keys = Object.keys(OldItems);
+	for (let i = 0; i < Keys.length; i++) {
+		let Key = Keys[i];
+		if (Content == GetMatchableContent(OldItems[Key])) return Key;
+	}
+	/*Object.keys(OldItems).forEach(function(Key) {
+		if (Content == GetMatchableContent(OldItems[Key])) return Key;
+	});*/
+}
+
+const GetContentHash = (Content, Pad) => {
 	let Hash = MakeStrAltern(md5(FlattenStr(Content) + " ".repeat(Pad)).substring(0,24));
 	//let HashB64 = Buffer.from(Hash, 'hex').toString('base64');
 	return Hash;
@@ -62,13 +117,14 @@ const StoreItem = Item => {
 		Item["Alias"] = Item["Alias"].trim();
 		Item["Content"] = Item["Content"].trim();
 		let Pad = 0;
-		let Hash = DoHashContent(Item["Content"], Pad);
+		let Hash = GetContentHash(Item["Content"], Pad);
 		while (Hash in Items) { // If item with same hash is already present, retry with pad
 			Pad++;
-			Hash = DoHashContent(Item["Content"], Pad);
+			Hash = GetContentHash(Item["Content"], Pad);
 		}
 		Items[Hash] = {
-			"Alias": ((Item["Alias"] != '') ? Item["Alias"].split(' ') : []), // Alias strings to reach the content without the real hash
+			"PermaHash": FindPermaHash(Item), // Find most similar content string in all old items, get permahash if present else hash
+			"Alias": ((Item["Alias"] != '') ? Item["Alias"].split(' ') : []), // Alias strings to reach the content alternatively to the content hash
 			"Title": Item["Title"],
 			"Content": Item["Content"],
 			"HTML": marked.parse(Item["Content"])
@@ -116,19 +172,21 @@ const ParseFiles = _ => {
 }
 
 const Main = _ => {
-	if (fs.existsSync('Old.json')){
-		OldItems = JSON.parse(fs.readFileSync(Files[i], 'utf8'));
+	if (fs.existsSync('Data.json')){
+		OldItems = JSON.parse(fs.readFileSync('Data.json', 'utf8'));
+		MakeOldItemsContentList();
+		console.log(OldItems)
 	}
 	ParseFiles();
 	console.log(Items);
 	Object.keys(Items).forEach(function(Key) {
 		//console.log(Key);
 	});
-	if (!fs.existsSync('public')){
-		fs.mkdirSync('public');
-	}
-	fs.writeFileSync('public/Data.json', JSON.stringify(Items, null, '\t'));
-	fs.writeFileSync('public/Data.min.json', JSON.stringify(Items));
+	//if (!fs.existsSync('public')){
+	//	fs.mkdirSync('public');
+	//}
+	fs.writeFileSync('Data.json', JSON.stringify(Items, null, '\t'));
+	fs.writeFileSync('Data.min.json', JSON.stringify(Items));
 };
 
 Main();
