@@ -4,13 +4,15 @@ const marked = require('./Libs/marked.min.js');
 const md5 = require('./Libs/md5.min.js');
 const strsim = require('./Libs/string-similarity.min.js');
 
-var Items = {},
+var BaseHTML = '',
+    Items = {},
     OldItems = {},
     OldItemsContent = [];
 
 // Hash formats
 // Base: md5 string truncated to 24 chars and alternated (final 6 bytes)
 // Base64: Base hash converted to base64 + prepend "!" (final 9 chars)
+// Suffixes: Real hash: $; Permahash: @
 
 // https://stackoverflow.com/a/73594511
 const walk = (dir, files = []) => {
@@ -58,13 +60,23 @@ const FlattenStr = Str => {
 	return Flat;
 };
 
+const GetTitle = Item => {
+	if ("Title" in Item) {
+		if (Item["Title"] != '') {
+			return '# ' + Item["Title"] + '\n\n';
+		} else {
+			return '';
+		}
+	}
+}
+
 const GetMatchableContent = Item => {
 	if (!"Content" in Item) return;
 	let Content = Item["Content"];
 	if (Content == '') return;
 	if ("Title" in Item) {
 		if (Item["Title"] != '') {
-			Content = '# ' + Item["Title"] + '\n\n' + Content;
+			Content = GetTitle(Item) + Content;
 		}
 	}
 	return Content;
@@ -117,8 +129,7 @@ const StoreItem = Item => {
 			"PermaHash": PermaHash,
 			"Alias": ((Item["Alias"] != '') ? Item["Alias"].split(' ') : []), // Alias strings to reach the content alternatively to the content hash
 			"Title": Item["Title"],
-			"Content": Item["Content"],
-			//"HTML": marked.parse(Item["Content"]),
+			"Content": Item["Content"]
 		};
 	}
 };
@@ -162,35 +173,54 @@ const ParseFiles = _ => {
 	}
 };
 
-const InitOldItems = _ => {
+const FancyEncrypt = Str => {
+	Str = btoa(Str);
+	let Chars = Str.split('').reverse();
+	for (let i = 0; i < Chars.length; i++) {
+		let c = Chars[i];
+		if (!isNaN(c)) Chars[i] = Math.abs(c-9);
+		else if (c == '=') Chars[i] = '#';
+		else if (c == c.toLowerCase()) Chars[i] = c.toUpperCase();
+		else if (c == c.toUpperCase()) Chars[i] = c.toLowerCase();
+	}
+	return Chars.join('');
+};
+
+const Init = _ => {
 	if (fs.existsSync('Data.json')) {
 		OldItems = JSON.parse(fs.readFileSync('Data.json', 'utf8'));
 		MakeOldItemsContentList();
 	}
+	if (fs.existsSync('Base.html')) {
+		BaseHTML = fs.readFileSync('Base.html', 'utf8');
+	}
+	
+};
+
+const MakeHTMLPage = Item => {
+	let Content = Item["Content"].replaceAll('<bittorrent://', 'magnet:?xt=urn:btih:');
+	let HTML = marked.parse(GetTitle(Item) + Item["Content"]);
+	return BaseHTML
+		.replaceAll('{{TITLE}}', Item["Title"])
+		//.replaceAll('{{CONTENT}}', HTML)
+		.replaceAll('{{CONTENTB64}}', btoa(HTML))
+		.replaceAll('{{CONTENTCRYPT}}', FancyEncrypt(HTML));
 };
 
 const WriteItem = Key => {
-	
-}
+	let PermaHash = Items[Key]["PermaHash"];
+	TryMkdirSync('public/@'+PermaHash);
+	fs.writeFileSync('public/@'+PermaHash+'/index.html', MakeHTMLPage(Items[Key]));
+};
 
 const WritePages = _ => {
-	//TryMkdirSync('public');
 	Object.keys(Items).forEach(function(Key) {
 		WriteItem(Key);
-		/*if ("PermaHash" in Items[Key]) {
-			let PermaHash = Items[Key]["PermaHash"];
-			if (PermaHash != '') {
-				// write permahash file
-				TryMkdirSync('public/'+PermaHash);
-				fs.writeFileSync('public/'+PermaHash+'/index.html', Items[Key]["Content"]);
-			}
-		}
-		// write hash file*/
 	});
-}
+};
 
 const Main = _ => {
-	InitOldItems();
+	Init();
 	ParseFiles();
 	//console.log(Items);
 	fs.writeFileSync('Data.json', JSON.stringify(Items, null, '\t'));
