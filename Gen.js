@@ -4,15 +4,28 @@ const marked = require('./Libs/marked.min.js');
 const md5 = require('./Libs/md5.min.js');
 const strsim = require('./Libs/string-similarity.min.js');
 
+/* TODO:
+   - Redirects
+*/
+
 var BaseHTML = '',
     Items = {},
     OldItems = {},
     OldItemsContent = [];
 
-// Hash formats
-// Base: md5 string truncated to 24 chars and alternated (final 6 bytes)
-// Base64: Base hash converted to base64 + prepend "!" (final 9 chars)
-// Suffixes: Real hash: $; Permahash: @
+const NoScriptNotice = `
+<p><b>This page requires JavaScript</b> to work for security reasons.</p>
+<p>If you see this message:</p>
+<ul>
+<li>You may have disabled JavaScript in your browser. If that's the case, you should <b>re-enable it</b>.</li>
+<li>Your browser may be outdated and unable to run modern code.</li>
+</ul>
+<p>Don't worry, as all the code is:</p>
+<ul>
+<li>Open source: You can review it, by using "View Page Source" or visiting <a href="https://gitlab.com/octospacc/links" target="_blank" rel="noopener">the Git repo</a>.</li>
+<li>Free (libre): You don't have to give away your freedom.</li>
+</ul>
+`;
 
 // https://stackoverflow.com/a/73594511
 const walk = (dir, files = []) => {
@@ -44,9 +57,7 @@ const InitItem = _ => {
 const MakeStrAltern = Str => {
 	let New = '';
 	for (let i = 0; i < Str.length; i++) {
-		if (i % 2 == 0) {
-			New += Str[i];
-		}
+		if (i % 2 == 0) New += Str[i];
 	}
 	return New;
 };
@@ -68,7 +79,7 @@ const GetTitle = Item => {
 			return '';
 		}
 	}
-}
+};
 
 const GetMatchableContent = Item => {
 	if (!"Content" in Item) return;
@@ -127,9 +138,10 @@ const StoreItem = Item => {
 		if (!PermaHash) PermaHash = Hash;
 		Items[Hash] = {
 			"PermaHash": PermaHash,
-			"Alias": ((Item["Alias"] != '') ? Item["Alias"].split(' ') : []), // Alias strings to reach the content alternatively to the content hash
+			"Obfuscation": (Item["Obfuscation"] == 'false' ? false : true),
+			"Alias": (Item["Alias"] != '' ? Item["Alias"].split(' ') : []),
 			"Title": Item["Title"],
-			"Content": Item["Content"]
+			"Content": Item["Content"],
 		};
 	}
 };
@@ -144,10 +156,11 @@ const DoParseFile = Data => {
 		if (LineTrim.startsWith('# ')) { // Title of new item
 			StoreItem(Item); // Store previous item (if exists)
 			Item = InitItem();
+			ParsedMeta = false;
 			Item["Title"] = LineTrim.substring(2);
 		} else if (LineTrim.startsWith('// ') && !ParsedMeta) { // Meta line
 			let MetaLine = LineTrim.substring(3).toLowerCase();
-			['Alias'].forEach(function(i) {
+			['Alias','Obfuscation'].forEach(function(i) {
 				if (MetaLine.startsWith(i.toLowerCase() + ' ')) {
 					Item[i] = MetaLine.substring(i.length+1);
 				}
@@ -194,23 +207,34 @@ const Init = _ => {
 	if (fs.existsSync('Base.html')) {
 		BaseHTML = fs.readFileSync('Base.html', 'utf8');
 	}
-	
 };
 
 const MakeHTMLPage = Item => {
-	let Content = Item["Content"].replaceAll('<bittorrent://', 'magnet:?xt=urn:btih:');
-	let HTML = marked.parse(GetTitle(Item) + Item["Content"]);
+	let Content = Item["Content"].replaceAll('<bittorrent://', '<magnet:?xt=urn:btih:');
+	let HTML = marked.parse(GetTitle(Item) + Content);
 	return BaseHTML
+		.replaceAll('{{NOSCRIPT}}', (Item["Obfuscation"] ? NoScriptNotice : ''))
 		.replaceAll('{{TITLE}}', Item["Title"])
-		//.replaceAll('{{CONTENT}}', HTML)
-		.replaceAll('{{CONTENTB64}}', btoa(HTML))
-		.replaceAll('{{CONTENTCRYPT}}', FancyEncrypt(HTML));
+		.replaceAll('{{CONTENT}}', (Item["Obfuscation"] ? '' : HTML))
+		//.replaceAll('{{CONTENTB64}}', btoa(HTML))
+		.replaceAll('{{CONTENTCRYPT}}', (Item["Obfuscation"] ? FancyEncrypt(HTML) : ''));
 };
 
 const WriteItem = Key => {
 	let PermaHash = Items[Key]["PermaHash"];
+	let HTML = MakeHTMLPage(Items[Key]);
+	let Raw = JSON.stringify(Items[Key], null, '\t');
 	TryMkdirSync('public/@'+PermaHash);
-	fs.writeFileSync('public/@'+PermaHash+'/index.html', MakeHTMLPage(Items[Key]));
+	fs.writeFileSync('public/@'+PermaHash+'/index.html', HTML);
+	fs.writeFileSync('public/@'+PermaHash+'/Data.json', Raw);
+	TryMkdirSync('public/$'+Key);
+	fs.writeFileSync('public/$'+Key+'/index.html', HTML);
+	fs.writeFileSync('public/$'+Key+'/Data.json', Raw);
+	Items[Key]["Alias"].forEach(function(Alias) {
+		TryMkdirSync('public/'+Alias);
+		fs.writeFileSync('public/'+Alias+'/index.html', HTML);
+		fs.writeFileSync('public/'+Alias+'/Data.json', Raw);
+	});
 };
 
 const WritePages = _ => {
@@ -222,7 +246,6 @@ const WritePages = _ => {
 const Main = _ => {
 	Init();
 	ParseFiles();
-	//console.log(Items);
 	fs.writeFileSync('Data.json', JSON.stringify(Items, null, '\t'));
 	WritePages();
 };

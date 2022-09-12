@@ -17,6 +17,6 @@ function Init(d) {
 		let HTML;
 		//if (d["B64"] != '') HTML = atob(d["B64"]);
 		/*else*/ if (d["Cr"] != '') HTML = Dcr(d["Cr"]);
-		document.body.innerHTML = HTML;
+		if (HTML) document.body.innerHTML = HTML;
 	//} catch(e) {}
 }

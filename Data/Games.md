@@ -1,12 +1,14 @@
-# 1
+# Celeste
 
-// A
-// B
+PC:  
+- <https://store.steampowered.com/app/504230/Celeste>
+- (Linux glibc) <bittorrent://5ca6e1b55ee4eb0265481ef465aec2e819535e01>
 
-... Test
+Nintendo Switch:  
+- <https://www.nintendo.it/Giochi/Giochi-scaricabili-per-Nintendo-Switch/Celeste-1207064.html>
+- <bittorrent://692c8854caa97951edbb4e4adf4803d947f50635>
 
-# Pez
+# Splatoon 3
 
-Like lol s
-
-Test,
+- <https://www.nintendo.it/Giochi/Giochi-per-Nintendo-Switch/Splatoon-3-1924751.html>
+- <bittorrent://02fe877f0e69ae46ace0544c948473ede7e01f4a>

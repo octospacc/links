@@ -1,0 +1,16 @@
+image: alpine:latest
+
+before_script: |
+  apk update
+  apk add wget npm
+
+pages:
+  stage: deploy
+  script: |
+    # wget https://go.octt.eu.org/Data.json
+    ./Build.sh
+  artifacts:
+    paths:
+    - public
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
