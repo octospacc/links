@@ -7,7 +7,7 @@ before_script: |
 pages:
   stage: deploy
   script: |
-    # wget https://go.octt.eu.org/Data.json
+    wget "https://go.octt.eu.org/Data.json"
     ./Build.sh
   artifacts:
     paths:

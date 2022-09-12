@@ -1,3 +1,8 @@
+# Animal Crossing: New Horizons
+
+- <https://www.nintendo.it/Giochi/Giochi-per-Nintendo-Switch/Animal-Crossing-New-Horizons-1438623.html>
+- <bittorrent://915e2c95e3df054f105e5b7be33a03628f4d6609>
+
 # Celeste
 
 PC:  
