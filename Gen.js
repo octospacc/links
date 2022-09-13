@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const marked = require('./Libs/marked.min.js');
@@ -5,14 +6,15 @@ const md5 = require('./Libs/md5.min.js');
 const strsim = require('./Libs/string-similarity.min.js');
 
 /* TODO:
-   - Redirects
+   - Stop using strng similarity
+   - Handle duplicated random ids
+   - Cleaner JSON
+   - Rich preview
+   - Autoredirects
+   - Embeds
 */
 
-var BaseHTML = '',
-    Items = {},
-    OldItems = {},
-    OldItemsContent = [];
-
+const HashSize = 6;
 const NoScriptNotice = `
 <p><b>This page requires JavaScript</b> to work for security reasons.</p>
 <p>If you see this message:</p>
@@ -26,6 +28,11 @@ const NoScriptNotice = `
 <li>Free (libre): You don't have to give away your freedom.</li>
 </ul>
 `;
+
+var BaseHTML = '',
+    Items = {},
+    OldItems = {},
+    AllItemsContent = [];
 
 // https://stackoverflow.com/a/73594511
 const walk = (dir, files = []) => {
@@ -93,21 +100,27 @@ const GetMatchableContent = Item => {
 	return Content;
 };
 
-const FindPermaHash = Item => {
-	if (OldItemsContent.length == 0) return;
-	let Match = strsim.findBestMatch(GetMatchableContent(Item), OldItemsContent).bestMatch.target;
+const TryGetItemId = Item => {
+	MakeAllItemsContentList();
+	if (AllItemsContent.length == 0) return;
+	let Match = strsim.findBestMatch(GetMatchableContent(Item), AllItemsContent).bestMatch.target;
 	let Key = FindOldItemsKey(Match);
-	if ("PermaHash" in OldItems[Key]) {
-		let PermaHash = OldItems[Key]["PermaHash"];
-		if (PermaHash != '') return PermaHash;
+	if ('Id' in OldItems[Key]) {
+		let Id = OldItems[Key]["Id"];
+		if (Id != '' && Id != undefined) return Id;
 	}
-	return Key;
 };
 
-const MakeOldItemsContentList = _ => {
+const MakeAllItemsContentList = _ => {
 	Object.values(OldItems).forEach(function(Item) {
-		OldItemsContent = OldItemsContent.concat([GetMatchableContent(Item)]);
+		AllItemsContent = AllItemsContent.concat([GetMatchableContent(Item)]);
 	});
+	/*
+	Object.values(Items).forEach(function(Item) {
+		AllItemsContent = AllItemsContent.concat([GetMatchableContent(Item)]);
+	});
+	*/
+	//if (Add) AllItemsContent = AllItemsContent.concat(Add);
 };
 
 const FindOldItemsKey = Content => {
@@ -119,7 +132,7 @@ const FindOldItemsKey = Content => {
 };
 
 const GetContentHash = (Content, Pad) => {
-	let Hash = MakeStrAltern(md5(FlattenStr(Content) + " ".repeat(Pad)).substring(0,24));
+	let Hash = MakeStrAltern(md5(FlattenStr(Content) + " ".repeat(Pad)).substring(0,HashSize*4));
 	//let HashB64 = Buffer.from(Hash, 'hex').toString('base64');
 	return Hash;
 };
@@ -134,10 +147,11 @@ const StoreItem = Item => {
 			Pad++;
 			Hash = GetContentHash(Item["Content"], Pad);
 		}
-		let PermaHash = FindPermaHash(Item);
-		if (!PermaHash) PermaHash = Hash;
+		let Id = TryGetItemId(Item);
+		if (!Id) Id = crypto.randomBytes(HashSize).toString('hex');
 		Items[Hash] = {
-			"PermaHash": PermaHash,
+			"Id": Id,
+			"Hash": Hash,
 			"Obfuscation": (Item["Obfuscation"] == 'false' ? false : true),
 			"Alias": (Item["Alias"] != '' ? Item["Alias"].split(' ') : []),
 			"Title": Item["Title"],
@@ -151,16 +165,16 @@ const DoParseFile = Data => {
 	let ParsedMeta = false;
 	let Lines = Data.trim().split('\n');
 	for (let i = 0; i < Lines.length; i++) {
-		let Line = Lines[i];
-		let LineTrim = Line.trim();
-		if (LineTrim.startsWith('# ')) { // Title of new item
+		let l = Lines[i];
+		let lt = l.trim();
+		if (lt.startsWith('# ')) { // Title of new item
 			StoreItem(Item); // Store previous item (if exists)
 			Item = InitItem();
 			ParsedMeta = false;
-			Item["Title"] = LineTrim.substring(2);
-		} else if (LineTrim.startsWith('// ') && !ParsedMeta) { // Meta line
-			let MetaLine = LineTrim.substring(3).toLowerCase();
-			['Alias','Obfuscation'].forEach(function(i) {
+			Item["Title"] = lt.substring(2);
+		} else if (lt.startsWith('// ') && !ParsedMeta) { // Meta line
+			let MetaLine = lt.substring(3).toLowerCase();
+			['Id','Alias','Obfuscation'].forEach(function(i) {
 				if (MetaLine.startsWith(i.toLowerCase() + ' ')) {
 					Item[i] = MetaLine.substring(i.length+1);
 				}
@@ -169,19 +183,20 @@ const DoParseFile = Data => {
 				ParsedMeta = true;
 			}
 		} else {
-			Item["Content"] += Line + '\n';
+			Item["Content"] += l + '\n';
 		}
 	}
 	StoreItem(Item); // Store last item
 };
 
-const ParseFiles = _ => {
+const DoHandleFiles = Mode => {
 	let Files = walk('Data');
 	for (let i = 0; i < Files.length; i++) {
 		let File = Files[i].toLowerCase();
 		if (File.endsWith('.md') ||  File.endsWith('.markdown')) {
 			let Data = fs.readFileSync(Files[i], 'utf8');
-			DoParseFile(Data);
+			if (Mode == 'Parse') DoParseFile(Data);
+			else if (Mode == 'Patch') DoPatchFile(Data);
 		}
 	}
 };
@@ -202,7 +217,7 @@ const FancyEncrypt = Str => {
 const Init = _ => {
 	if (fs.existsSync('Data.json')) {
 		OldItems = JSON.parse(fs.readFileSync('Data.json', 'utf8'));
-		MakeOldItemsContentList();
+		//MakeAllItemsContentList();
 	}
 	if (fs.existsSync('Base.html')) {
 		BaseHTML = fs.readFileSync('Base.html', 'utf8');
@@ -221,15 +236,16 @@ const MakeHTMLPage = Item => {
 };
 
 const WriteItem = Key => {
-	let PermaHash = Items[Key]["PermaHash"];
+	let Id = Items[Key]["Id"];
+	let Hash = Items[Key]["Hash"];
 	let HTML = MakeHTMLPage(Items[Key]);
 	let Raw = JSON.stringify(Items[Key], null, '\t');
-	TryMkdirSync('public/@'+PermaHash);
-	fs.writeFileSync('public/@'+PermaHash+'/index.html', HTML);
-	fs.writeFileSync('public/@'+PermaHash+'/Data.json', Raw);
-	TryMkdirSync('public/$'+Key);
-	fs.writeFileSync('public/$'+Key+'/index.html', HTML);
-	fs.writeFileSync('public/$'+Key+'/Data.json', Raw);
+	TryMkdirSync('public/@'+Id);
+	fs.writeFileSync('public/@'+Id+'/index.html', HTML);
+	fs.writeFileSync('public/@'+Id+'/Data.json', Raw);
+	TryMkdirSync('public/$'+Hash);
+	fs.writeFileSync('public/$'+Hash+'/index.html', HTML);
+	fs.writeFileSync('public/$'+Hash+'/Data.json', Raw);
 	Items[Key]["Alias"].forEach(function(Alias) {
 		TryMkdirSync('public/'+Alias);
 		fs.writeFileSync('public/'+Alias+'/index.html', HTML);
@@ -243,11 +259,67 @@ const WritePages = _ => {
 	});
 };
 
+const DoPatchFile = Data => {
+/*
+	//let Item = InitItem();
+	let MetaPresent, ParsedMeta, IdPresent = false, false, false;
+	let Lines = Data.trim().split('\n');
+	for (let i = 0; i < Lines.length; i++) {
+		let l = Lines[i];
+		let lt = l.trim();
+
+		if (lt.startsWith('# ')) { // Title of new item
+			MetaPresent = false;
+		} else if (lt == '') {
+			continue;	
+		} else if (lt.startsWith('// ')) { // Meta line
+			MetaPresent = true;
+			let MetaLine = lt.substring(3).toLowerCase();
+			if (MetaLine.startsWith('id ')) IdPresent = true;
+		} else {
+			if (!IdPresent) {
+				if (MetaPresent) {
+					for (let j = i; j = 0; j--) {
+						if (Lines[j-1].startsWith('// ')) {
+							Lines.splice(j, 0, IdLine)
+						}
+					}
+				} else {
+					Lines.splice(i, 0, '// Id '++'\n');
+				}
+			}
+		}
+
+		if (lt.startsWith('# ')) { // Title of new item
+			// StoreItem(Item); // Store previous item (if exists)
+			//Item = InitItem();
+			//ParsedMeta = false;
+		} else if (lt.startsWith('// ') && !ParsedMeta) { // Meta line
+			let MetaLine = lt.substring(3).toLowerCase();
+			['Id'].forEach(function(i) {
+				if (MetaLine.startsWith(i.toLowerCase() + ' ')) {
+					Item[i] = MetaLine.substring(i.length+1);
+				}
+			});
+			if (!Lines[i+1].trim().startsWith('// ')) { // End of meta lines
+				if !Id {
+					Lines.splice(i+1, 0, '// Id '+);
+				}
+				//ParsedMeta = true;
+			}
+		}
+		
+	}
+	// StoreItem(Item); // Store last item
+*/
+};
+
 const Main = _ => {
 	Init();
-	ParseFiles();
+	DoHandleFiles('Parse');
 	fs.writeFileSync('Data.json', JSON.stringify(Items, null, '\t'));
 	WritePages();
+	DoHandleFiles('Patch');
 };
 
 Main();
