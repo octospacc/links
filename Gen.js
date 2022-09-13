@@ -7,6 +7,7 @@ const strsim = require('./Libs/string-similarity.min.js');
 
 /* TODO:
    - Stop using strng similarity
+   - List.json + Hide some items
    - Handle duplicated random ids
    - Cleaner JSON
    - Rich preview
@@ -123,6 +124,15 @@ const MakeAllItemsContentList = _ => {
 	//if (Add) AllItemsContent = AllItemsContent.concat(Add);
 };
 
+const FindItemId = Content => {
+	let Values = Object.values(Items);
+	for (let i = 0; i < Values.length; i++) {
+		let Item = Values[i];
+		//console.log(0,Content, 1,Item["Content"])
+		if (Content.trim() == Item["Content"].trim()) return Item["Id"];
+	}
+};
+
 const FindOldItemsKey = Content => {
 	let Keys = Object.keys(OldItems);
 	for (let i = 0; i < Keys.length; i++) {
@@ -179,9 +189,7 @@ const DoParseFile = Data => {
 					Item[i] = MetaLine.substring(i.length+1);
 				}
 			});
-			if (!Lines[i+1].trim().startsWith('// ')) { // End of meta lines
-				ParsedMeta = true;
-			}
+			if (!Lines[i+1].trim().startsWith('// ')) ParsedMeta = true;
 		} else {
 			Item["Content"] += l + '\n';
 		}
@@ -195,8 +203,11 @@ const DoHandleFiles = Mode => {
 		let File = Files[i].toLowerCase();
 		if (File.endsWith('.md') ||  File.endsWith('.markdown')) {
 			let Data = fs.readFileSync(Files[i], 'utf8');
-			if (Mode == 'Parse') DoParseFile(Data);
-			else if (Mode == 'Patch') DoPatchFile(Data);
+			if (Mode == 'Parse') {
+				DoParseFile(Data);
+			} else if (Mode == 'Patch') {
+				fs.writeFileSync(Files[i], DoPatchFile(Data));
+			}
 		}
 	}
 };
@@ -240,9 +251,9 @@ const WriteItem = Key => {
 	let Hash = Items[Key]["Hash"];
 	let HTML = MakeHTMLPage(Items[Key]);
 	let Raw = JSON.stringify(Items[Key], null, '\t');
-	TryMkdirSync('public/@'+Id);
-	fs.writeFileSync('public/@'+Id+'/index.html', HTML);
-	fs.writeFileSync('public/@'+Id+'/Data.json', Raw);
+	TryMkdirSync('public/!'+Id);
+	fs.writeFileSync('public/!'+Id+'/index.html', HTML);
+	fs.writeFileSync('public/!'+Id+'/Data.json', Raw);
 	TryMkdirSync('public/$'+Hash);
 	fs.writeFileSync('public/$'+Hash+'/index.html', HTML);
 	fs.writeFileSync('public/$'+Hash+'/Data.json', Raw);
@@ -260,58 +271,50 @@ const WritePages = _ => {
 };
 
 const DoPatchFile = Data => {
-/*
-	//let Item = InitItem();
-	let MetaPresent, ParsedMeta, IdPresent = false, false, false;
+	let IdLines = [],
+		IdLine = -1,
+	    Content = '',
+	    MetaPresent = false,
+	    IdPresent = false,
+	    ParsedMeta = false;
 	let Lines = Data.trim().split('\n');
 	for (let i = 0; i < Lines.length; i++) {
 		let l = Lines[i];
 		let lt = l.trim();
-
-		if (lt.startsWith('# ')) { // Title of new item
-			MetaPresent = false;
-		} else if (lt == '') {
-			continue;	
-		} else if (lt.startsWith('// ')) { // Meta line
+		if (lt.startsWith('# ')) { // New item
+			if (IdLine != -1) Lines.splice(IdLine, 0, '// Id ' + FindItemId(Content) + '\n');
+			IdLine = -1,
+			Content = '',
+			MetaPresent = false,
+			IdPresent = false,
+			ParsedMeta = false;
+		} else if (lt.startsWith('// ') && !ParsedMeta) { // Meta line
 			MetaPresent = true;
 			let MetaLine = lt.substring(3).toLowerCase();
 			if (MetaLine.startsWith('id ')) IdPresent = true;
+			if (!Lines[i+1].trim().startsWith('// ')) ParsedMeta = true;
 		} else {
-			if (!IdPresent) {
+			if (!IdPresent && lt != '') {
 				if (MetaPresent) {
-					for (let j = i; j = 0; j--) {
+					for (let j = i; j > 0; j--) {
 						if (Lines[j-1].startsWith('// ')) {
-							Lines.splice(j, 0, IdLine)
+							IdLine = j; //IdLines.concat(j);
+							//Lines.splice(j, 0, '// Id '+Id+'\n');
+							IdPresent = true;
+							break;
 						}
 					}
 				} else {
-					Lines.splice(i, 0, '// Id '++'\n');
+					IdLine = i; //IdLines.concat(i);
+					//Lines.splice(i, 0, '// Id '+Id+'\n');
+					IdPresent = true;
 				}
 			}
+			Content += l + '\n';
 		}
-
-		if (lt.startsWith('# ')) { // Title of new item
-			// StoreItem(Item); // Store previous item (if exists)
-			//Item = InitItem();
-			//ParsedMeta = false;
-		} else if (lt.startsWith('// ') && !ParsedMeta) { // Meta line
-			let MetaLine = lt.substring(3).toLowerCase();
-			['Id'].forEach(function(i) {
-				if (MetaLine.startsWith(i.toLowerCase() + ' ')) {
-					Item[i] = MetaLine.substring(i.length+1);
-				}
-			});
-			if (!Lines[i+1].trim().startsWith('// ')) { // End of meta lines
-				if !Id {
-					Lines.splice(i+1, 0, '// Id '+);
-				}
-				//ParsedMeta = true;
-			}
-		}
-		
 	}
-	// StoreItem(Item); // Store last item
-*/
+	if (IdLine != -1) Lines.splice(IdLine, 0, '// Id ' + FindItemId(Content) + '\n');
+	return Lines.join('\n') + '\n'
 };
 
 const Main = _ => {
