@@ -1,9 +1,13 @@
 # Animal Crossing: New Horizons
 
+// Id afa0200c237a
+
 - <https://www.nintendo.it/Giochi/Giochi-per-Nintendo-Switch/Animal-Crossing-New-Horizons-1438623.html>
 - <bittorrent://915e2c95e3df054f105e5b7be33a03628f4d6609>
 
 # Celeste
+
+// Id ce7941cddd5e
 
 PC:  
 - <https://store.steampowered.com/app/504230/Celeste>
@@ -14,6 +18,8 @@ Nintendo Switch:
 - <bittorrent://692c8854caa97951edbb4e4adf4803d947f50635>
 
 # Splatoon 3
+
+// Id 8e62cec12c93
 
 - <https://www.nintendo.it/Giochi/Giochi-per-Nintendo-Switch/Splatoon-3-1924751.html>
 - <bittorrent://02fe877f0e69ae46ace0544c948473ede7e01f4a>
