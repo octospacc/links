@@ -1,12 +1,12 @@
 {
 	"afa0200c237a": {
 		"Id": "afa0200c237a",
-		"Hash": "85d0792d0f64",
+		"Hash": "8c4f52677e2a",
 		"Visibility": true,
 		"Obfuscation": true,
 		"Alias": [],
 		"Title": "Animal Crossing: New Horizons",
-		"Content": "- <https://www.amazon.it/Standard-Animal-Crossing-Nintendo-Switch/dp/B07HTFD1SG>\n- <https://www.nintendo.it/Giochi/Giochi-per-Nintendo-Switch/Animal-Crossing-New-Horizons-1438623.html>\n- <bittorrent://915e2c95e3df054f105e5b7be33a03628f4d6609>"
+		"Content": "_Solo per Nintendo Switch._\n\nAcquista fisico:  \n- <https://www.amazon.it/Standard-Animal-Crossing-Nintendo-Switch/dp/B07HTFD1SG>\n\nOttieni digitale:  \n- <https://www.nintendo.it/Giochi/Giochi-per-Nintendo-Switch/Animal-Crossing-New-Horizons-1438623.html>\n- <bittorrent://915e2c95e3df054f105e5b7be33a03628f4d6609>"
 	},
 	"ce7941cddd5e": {
 		"Id": "ce7941cddd5e",
@@ -17,13 +17,22 @@
 		"Title": "Celeste",
 		"Content": "PC:  \n- <https://store.steampowered.com/app/504230/Celeste>\n- (Linux glibc) <bittorrent://5ca6e1b55ee4eb0265481ef465aec2e819535e01>\n\nNintendo Switch:  \n- <https://www.nintendo.it/Giochi/Giochi-scaricabili-per-Nintendo-Switch/Celeste-1207064.html>\n- <bittorrent://692c8854caa97951edbb4e4adf4803d947f50635>"
 	},
+	"802584a50c8a": {
+		"Id": "802584a50c8a",
+		"Hash": "7f64ae0c63a4",
+		"Visibility": true,
+		"Obfuscation": true,
+		"Alias": [],
+		"Title": "Splatoon 2",
+		"Content": "_Solo per Nintendo Switch._\n\nAcquista fisico:  \n- <https://www.amazon.it/Nintendo-2520549-Splatoon-2-Switch/dp/B01MSB0LJF>\n\nOttieni digitale:  \n- <https://www.nintendo.it/Giochi/Giochi-per-Nintendo-Switch/Splatoon-2-1173295.html>\n- <bittorrent://ec94decfc9b4fdf07823e8a83caebe17ee088871>"
+	},
 	"8e62cec12c93": {
 		"Id": "8e62cec12c93",
-		"Hash": "2b557e8e1eee",
+		"Hash": "a94ba5aa5693",
 		"Visibility": true,
 		"Obfuscation": true,
 		"Alias": [],
 		"Title": "Splatoon 3",
-		"Content": "- <https://www.amazon.it/Nintendo-Splatoon-3/dp/B08X849HXF>\n- <https://www.nintendo.it/Giochi/Giochi-per-Nintendo-Switch/Splatoon-3-1924751.html>\n- <bittorrent://02fe877f0e69ae46ace0544c948473ede7e01f4a>"
+		"Content": "_Solo per Nintendo Switch._\n\nAcquista fisico:  \n- <https://www.amazon.it/Nintendo-Splatoon-3/dp/B08X849HXF>\n\nOttieni digitale:  \n- <https://www.nintendo.it/Giochi/Giochi-per-Nintendo-Switch/Splatoon-3-1924751.html>\n- <bittorrent://02fe877f0e69ae46ace0544c948473ede7e01f4a>"
 	}
 }
