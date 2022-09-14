@@ -229,12 +229,12 @@ const WriteItem = Item => {
 	let Hash = Item["Hash"];
 	let HTML = MakeHTMLPage(Item);
 	let Raw = JSON.stringify(Item, null, '\t');
-	TryMkdirSync('public/!'+Id);
-	fs.writeFileSync('public/!'+Id+'/index.html', HTML);
-	fs.writeFileSync('public/!'+Id+'/Data.json', Raw);
-	TryMkdirSync('public/$'+Hash);
-	fs.writeFileSync('public/$'+Hash+'/index.html', HTML);
-	fs.writeFileSync('public/$'+Hash+'/Data.json', Raw);
+	TryMkdirSync('public/$'+Id);
+	fs.writeFileSync('public/$'+Id+'/index.html', HTML);
+	fs.writeFileSync('public/$'+Id+'/Data.json', Raw);
+	TryMkdirSync('public/!'+Hash);
+	fs.writeFileSync('public/!'+Hash+'/index.html', HTML);
+	fs.writeFileSync('public/!'+Hash+'/Data.json', Raw);
 	Item["Alias"].forEach(function(Alias) {
 		TryMkdirSync('public/'+Alias);
 		fs.writeFileSync('public/'+Alias+'/index.html', HTML);
