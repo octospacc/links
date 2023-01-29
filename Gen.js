@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
@@ -39,15 +40,15 @@ const walk = (dir, files = []) => {
 			walk(dir + path.sep + f, files);
 		} else {
 			files.push(dir + path.sep + f);
-		}
-	}
+		};
+	};
 	return files;
 };
 
 const TryMkdirSync = Dir => {
 	if (!fs.existsSync(Dir)) {
-		fs.mkdirSync(Dir, {recursive:true});
-	}
+		return fs.mkdirSync(Dir, {recursive:true});
+	};
 };
 
 const InitItem = _ => {
@@ -61,7 +62,7 @@ const MakeStrAltern = Str => {
 	let New = '';
 	for (let i = 0; i < Str.length; i++) {
 		if (i % 2 == 0) New += Str[i];
-	}
+	};
 	return New;
 };
 
@@ -70,7 +71,7 @@ const FlattenStr = Str => {
 	let Lines = Str.trim().split('\n');
 	for (let i = 0; i < Lines.length; i++) {
 		Flat += Lines[i].trim() + '\n';
-	}
+	};
 	return Flat;
 };
 
@@ -80,8 +81,8 @@ const GetTitle = Item => {
 			return '# ' + Item["Title"] + '\n\n';
 		} else {
 			return '';
-		}
-	}
+		};
+	};
 };
 
 const GetMatchableContent = Item => {
@@ -91,8 +92,8 @@ const GetMatchableContent = Item => {
 	if ("Title" in Item) {
 		if (Item["Title"] != '') {
 			Content = GetTitle(Item) + Content;
-		}
-	}
+		};
+	};
 	return Content;
 };
 
@@ -105,8 +106,8 @@ const GetItemId = Item => {
 			return OldId;
 		} else {
 			return crypto.randomBytes(HashSize).toString('hex');
-		}
-	}
+		};
+	};
 };
 
 const GetContentItemId = (Content, From) => {
@@ -115,7 +116,7 @@ const GetContentItemId = (Content, From) => {
 	for (let i = 0; i < Values.length; i++) {
 		let Item = Values[i];
 		if (Content.trim() == Item["Content"].trim()) return Item["Id"];
-	}
+	};
 };
 
 const GetContentHash = (Content, Pad) => {
@@ -131,7 +132,7 @@ const StoreItem = Item => {
 		let Id = GetItemId(Item);
 		while (Id in Items) { // If item with same id is already present, retry
 			Id = GetItemId(Item);
-		}
+		};
 		//let Pad = 0;
 		let Hash = GetContentHash(Item["Content"], 0);
 		//while (Hash in Items) { // If item with same hash is already present, retry with pad
@@ -147,7 +148,7 @@ const StoreItem = Item => {
 			"Title": Item["Title"],
 			"Content": Item["Content"],
 		};
-	}
+	};
 };
 
 const DoParseFile = Data => {
@@ -172,8 +173,8 @@ const DoParseFile = Data => {
 			if (!Lines[i+1].trim().startsWith('// ')) ParsedMeta = true;
 		} else {
 			Item["Content"] += l + '\n';
-		}
-	}
+		};
+	};
 	StoreItem(Item); // Store last item
 };
 
@@ -187,9 +188,9 @@ const DoHandleFiles = Mode => {
 				DoParseFile(Data);
 			} else if (Mode == 'Patch') {
 				fs.writeFileSync(Files[i], DoPatchFile(Data));
-			}
-		}
-	}
+			};
+		};
+	};
 };
 
 const FancyEncrypt = Str => {
@@ -201,7 +202,7 @@ const FancyEncrypt = Str => {
 		else if (c == '=') Chars[i] = '#';
 		else if (c == c.toLowerCase()) Chars[i] = c.toUpperCase();
 		else if (c == c.toUpperCase()) Chars[i] = c.toLowerCase();
-	}
+	};
 	return Chars.join('');
 };
 
@@ -211,7 +212,7 @@ const Init = _ => {
 	}
 	if (fs.existsSync('Base.html')) {
 		BaseHTML = fs.readFileSync('Base.html', 'utf8');
-	}
+	};
 };
 
 const MakeHTMLPage = Item => {
@@ -278,16 +279,16 @@ const DoPatchFile = Data => {
 							IdLine = j;
 							IdPresent = true;
 							break;
-						}
-					}
+						};
+					};
 				} else {
 					IdLine = i;
 					IdPresent = true;
-				}
-			}
+				};
+			};
 			Content += l + '\n';
-		}
-	}
+		};
+	};
 	if (IdLine != -1) Lines.splice(IdLine, 0, '// Id ' + GetContentItemId(Content) + '\n');
 	return Lines.join('\n') + '\n'
 };
