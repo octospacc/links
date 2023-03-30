@@ -51,3 +51,17 @@ Acquista fisico:
 Ottieni digitale:  
 - <https://www.nintendo.it/Giochi/Giochi-per-Nintendo-Switch/Splatoon-3-1924751.html>
 - <bittorrent://02fe877f0e69ae46ace0544c948473ede7e01f4a>
+
+# Tetris Effect
+
+// Id 908f2412a803
+
+<https://www.tetriseffect.game/>
+
+PC:  
+* <https://store.steampowered.com/app/1003590/Tetris_Effect_Connected/>
+* (Linux amd64 glibc) <bittorrent://a61a2d347aca5db9ad9d816652bd3e08a0cc4401>
+
+Nintendo Switch:  
+* <https://www.nintendo.it/Giochi/Giochi-scaricabili-per-Nintendo-Switch/Tetris-Effect-Connected-2018258.html>
+* (NSZ) <bittorrent://53ac9f1e38963c4c636648dd10145a798783de11>
