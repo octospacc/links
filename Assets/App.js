@@ -1,22 +1,28 @@
 // SPDX-License-Identifier: CC-BY-SA-4.0
 
-function Dcr(Cr) {
-	let Chars = Cr.split('').reverse();
-	for (let i = 0; i < Chars.length; i++) {
-		let c = Chars[i];
-		if (!isNaN(c)) Chars[i] = Math.abs(c-9);
-		else if (c == '#') Chars[i] = '=';
-		else if (c == c.toLowerCase()) Chars[i] = c.toUpperCase();
-		else if (c == c.toUpperCase()) Chars[i] = c.toLowerCase();
+function Dcr (cr) {
+	var chs = cr.split('').reverse();
+	for (var i = 0; i < chs.length; i++) {
+		var c = chs[i];
+		if (!isNaN(c)) chs[i] = Math.abs(c-9);
+		else if (c == '#') chs[i] = '=';
+		else if (c == c.toLowerCase()) chs[i] = c.toUpperCase();
+		else if (c == c.toUpperCase()) chs[i] = c.toLowerCase();
 	}
-	return atob(Chars.join(''));
+	return atob(chs.join(''));
 }
 
-function Init(d) {
-	//try {
-		let HTML;
-		//if (d["B64"] != '') HTML = atob(d["B64"]);
-		/*else*/ if (d["Cr"] != '') HTML = Dcr(d["Cr"]);
-		if (HTML) document.body.innerHTML = HTML;
-	//} catch(e) {}
+function Init (d) {
+	if (d.cr) {
+		var cpt = (JSON.parse(sessionStorage.getItem(Gdo.k)) || {}).cpt;
+		var ms = (cpt ? 300 : 800);
+		document.body.innerHTML = Dcr(Gdo.cpt);
+		var int = document.body.querySelector('button');
+		int.onclick = (function(){
+			this.disabled = !this.dprop;
+			sessionStorage.setItem(Gdo.k, JSON.stringify({ cpt: 1 }));
+			setTimeout(function(){ document.body.innerHTML = Dcr(d.cr) }, ms);
+		});
+		if (cpt) int.onclick();
+	}
 }

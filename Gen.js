@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const marked = require('./Libs/marked.min.js');
 const md5 = require('./Libs/md5.min.js');
+const FancyEncrypt = require('./Libs/FancyEncrypt.js');
 
 /* TODO:
    - Hide some items
@@ -26,6 +27,14 @@ const NoScriptNotice = `
 <li>Free (libre): You don't have to give away your freedom.</li>
 </ul>
 `;
+const CaptchaHtml = `<div style="border: double; display: inline-block; padding: 8px;"><label>
+<button style="width: 2em; height: 2em;"></button> <span style="vertical-align: sub;">I am not a robot</span>
+</label></div>`;
+
+const protocolPrefixes = {
+	bittorrent: "magnet:?xt=urn:btih:",
+	drivehlb0: "https://hlb0it.blogspot.com/?path=/Drive/",
+};
 
 var BaseHTML = '',
     Items = {},
@@ -193,19 +202,6 @@ const DoHandleFiles = Mode => {
 	};
 };
 
-const FancyEncrypt = Str => {
-	Str = btoa(Str);
-	let Chars = Str.split('').reverse();
-	for (let i = 0; i < Chars.length; i++) {
-		let c = Chars[i];
-		if (!isNaN(c)) Chars[i] = Math.abs(c-9);
-		else if (c == '=') Chars[i] = '#';
-		else if (c == c.toLowerCase()) Chars[i] = c.toUpperCase();
-		else if (c == c.toUpperCase()) Chars[i] = c.toLowerCase();
-	};
-	return Chars.join('');
-};
-
 const Init = _ => {
 	if (fs.existsSync('Data.json')) {
 		OldItems = JSON.parse(fs.readFileSync('Data.json', 'utf8'));
@@ -216,13 +212,16 @@ const Init = _ => {
 };
 
 const MakeHTMLPage = Item => {
-	let Content = Item["Content"].replaceAll('<bittorrent://', '<magnet:?xt=urn:btih:');
-	let HTML = marked.parse(GetTitle(Item) + Content);
+	let content;
+	for (const protocol in protocolPrefixes) {
+		content = Item.Content.replaceAll(`<${protocol}://`, `<${protocolPrefixes[protocol]}`);
+	}
+	let html = marked.parse(GetTitle(Item) + content);
 	return BaseHTML
-		.replaceAll('{{NOSCRIPT}}', (Item["Obfuscation"] ? NoScriptNotice : ''))
-		.replaceAll('{{TITLE}}', Item["Title"])
-		.replaceAll('{{CONTENT}}', (Item["Obfuscation"] ? '' : HTML))
-		.replaceAll('{{CONTENTCRYPT}}', (Item["Obfuscation"] ? FancyEncrypt(HTML) : ''));
+		.replaceAll('{{NOSCRIPT}}', (Item.Obfuscation ? NoScriptNotice : ''))
+		.replaceAll('{{TITLE}}', Item.Title)
+		.replaceAll('{{CONTENT}}', (Item.Obfuscation ? '' : html))
+		.replaceAll('{{CONTENTCRYPT}}', (Item.Obfuscation ? FancyEncrypt(html) : ''));
 };
 
 const WriteItem = Item => {
@@ -294,17 +293,17 @@ const DoPatchFile = Data => {
 };
 
 const MakeItemsList = _ => {
-	let List = {};
+	let list = {};
 	Object.values(Items).forEach(function(Item) {
-		let Id = Item["Id"];
-		List[Id] = {
-			"Id": Id,
-			"Hash": Item["Hash"],
-			"Alias": (Item["Alias"] != '' ? Item["Alias"].split(' ') : []),
-			"Title": Item["Title"],
+		let id = Item.Id;
+		list[id] = {
+			Id: id,
+			Hash: Item["Hash"],
+			Alias: (Item["Alias"] != '' ? Item["Alias"].split(' ') : []),
+			Title: Item["Title"],
 		};
 	});
-	return List;
+	return list;
 };
 
 const Main = _ => {
@@ -313,6 +312,10 @@ const Main = _ => {
 	fs.writeFileSync('Data.json', JSON.stringify(Items, null, '\t'));
 	WritePages();
 	fs.writeFileSync('public/List.json', JSON.stringify(MakeItemsList(), null, '\t'));
+	fs.writeFileSync('public/Gdo.js', `Gdo=${JSON.stringify({
+		k: 'org.eu.octt.go',
+		cpt: FancyEncrypt(CaptchaHtml),
+	})}`);
 	DoHandleFiles('Patch');
 };
 
