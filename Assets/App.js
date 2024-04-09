@@ -16,7 +16,7 @@ function Init (d) {
 	if (d.cr) {
 		var cpt = (JSON.parse(sessionStorage.getItem(Gdo.k)) || {}).cpt;
 		var ms = (cpt ? 300 : 800);
-		document.body.innerHTML = Dcr(Gdo.cpt);
+		document.body.innerHTML = '<h1>' + document.title + '</h1>' + Dcr(Gdo.cpt);
 		var int = document.body.querySelector('button');
 		int.onclick = (function(){
 			this.disabled = !this.dprop;

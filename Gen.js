@@ -212,9 +212,9 @@ const Init = _ => {
 };
 
 const MakeHTMLPage = Item => {
-	let content;
+	let content = Item.Content;
 	for (const protocol in protocolPrefixes) {
-		content = Item.Content.replaceAll(`<${protocol}://`, `<${protocolPrefixes[protocol]}`);
+		content = content.replaceAll(`<${protocol}://`, `<${protocolPrefixes[protocol]}`);
 	}
 	let html = marked.parse(GetTitle(Item) + content);
 	return BaseHTML
