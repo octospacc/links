@@ -153,6 +153,7 @@ const StoreItem = Item => {
 			"Hash": Hash,
 			"Visibility": (Item["Visibility"] == 'false' ? false : true),
 			"Obfuscation": (Item["Obfuscation"] == 'false' ? false : true),
+			"NetProtection": (Item["NetProtection"] == 'true' ? true : false),
 			"Alias": (Item["Alias"] != '' ? Item["Alias"].split(' ') : []),
 			"Title": Item["Title"],
 			"Content": Item["Content"],
@@ -166,7 +167,7 @@ const DoParseFile = Data => {
 	let Lines = Data.trim().split('\n');
 	for (let i = 0; i < Lines.length; i++) {
 		let l = Lines[i];
-		let lt = l.trim();
+		let lt = l.trim().replace('\t', ' ');
 		if (lt.startsWith('# ')) { // Title of new item
 			StoreItem(Item); // Store previous item (if exists)
 			Item = InitItem();
@@ -174,7 +175,7 @@ const DoParseFile = Data => {
 			Item["Title"] = lt.substring(2);
 		} else if (lt.startsWith('// ') && !ParsedMeta) { // Meta line
 			let MetaLine = lt.substring(3).toLowerCase();
-			['Id','Alias','Visibility','Obfuscation'].forEach(function(i) {
+			['Id', 'Alias', 'Visibility', 'Obfuscation', 'NetProtection'].forEach(function(i) {
 				if (MetaLine.startsWith(i.toLowerCase() + ' ')) {
 					Item[i] = MetaLine.substring(i.length+1);
 				}
@@ -218,16 +219,18 @@ const MakeHTMLPage = Item => {
 	}
 	let html = marked.parse(GetTitle(Item) + content);
 	return BaseHTML
-		.replaceAll('{{NOSCRIPT}}', (Item.Obfuscation ? NoScriptNotice : ''))
-		.replaceAll('{{TITLE}}', Item.Title)
-		.replaceAll('{{CONTENT}}', (Item.Obfuscation ? '' : html))
-		.replaceAll('{{CONTENTCRYPT}}', (Item.Obfuscation ? FancyEncrypt(html) : ''));
+		.replace('{{NOSCRIPT}}', (Item.Obfuscation ? NoScriptNotice : ''))
+		.replace('{{TITLE}}', (Item.Title || '[?]'))
+		.replace('{{CONTENT}}', (Item.Obfuscation ? '' : html))
+		.replace('{{CONTENTCRYPT}}', (Item.Obfuscation && !Item.NetProtection ? FancyEncrypt(html) : ''))
+		.replace('{{NETPROTECTION}}', (Item.NetProtection ? true : ''));
 };
 
 const WriteItem = Item => {
 	let Id = Item["Id"];
 	let Hash = Item["Hash"];
 	let HTML = MakeHTMLPage(Item);
+	Item["Html"] = marked.parse(GetTitle(Item) + Item["Content"]);
 	let Raw = JSON.stringify(Item, null, '\t');
 	TryMkdirSync('public/$'+Id);
 	fs.writeFileSync('public/$'+Id+'/index.html', HTML);

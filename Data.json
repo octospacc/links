@@ -4,6 +4,7 @@
 		"Hash": "837344a7cb43",
 		"Visibility": true,
 		"Obfuscation": true,
+		"NetProtection": false,
 		"Alias": [],
 		"Title": "Disposable Camera - OldRoll",
 		"Content": "Official mobile app:\n* <https://play.google.com/store/apps/details?id=com.accordion.analogcam>\n* <https://apps.apple.com/us/app/oldroll-vintage-film-camera/id1570093460>\n\nMod/crack: VIP unlocked, all camera models unlocked:\n* APK v4.9.0 + preloaded data: <drivehlb0://Misc/OldRoll%20%5Bcom.accordion.analogcam%5D%20v4.9.0%20Cracked%20%2B%20Preloaded%20Data.7z>"
@@ -13,6 +14,7 @@
 		"Hash": "570255d5c71d",
 		"Visibility": true,
 		"Obfuscation": true,
+		"NetProtection": false,
 		"Alias": [],
 		"Title": "Animal Crossing: New Horizons",
 		"Content": "_Solo per Nintendo Switch._\n\nAcquista fisico:  \n* <https://www.amazon.it/Standard-Animal-Crossing-Nintendo-Switch/dp/B07HTFD1SG>\n\nOttieni digitale:  \n* <https://www.nintendo.it/Giochi/Giochi-per-Nintendo-Switch/Animal-Crossing-New-Horizons-1438623.html>\n* <bittorrent://915e2c95e3df054f105e5b7be33a03628f4d6609>"
@@ -22,6 +24,7 @@
 		"Hash": "217c8c190508",
 		"Visibility": true,
 		"Obfuscation": true,
+		"NetProtection": false,
 		"Alias": [],
 		"Title": "Celeste",
 		"Content": "PC:  \n* <https://store.steampowered.com/app/504230/Celeste>\n* (Linux glibc) <bittorrent://5ca6e1b55ee4eb0265481ef465aec2e819535e01>\n\nNintendo Switch:  \n* <https://www.nintendo.it/Giochi/Giochi-scaricabili-per-Nintendo-Switch/Celeste-1207064.html>\n* <bittorrent://692c8854caa97951edbb4e4adf4803d947f50635>"
@@ -31,6 +34,7 @@
 		"Hash": "42925fd8d8b6",
 		"Visibility": true,
 		"Obfuscation": true,
+		"NetProtection": false,
 		"Alias": [],
 		"Title": "Splatoon 2",
 		"Content": "_Solo per Nintendo Switch._\n\nAcquista fisico:  \n* <https://www.amazon.it/Nintendo-2520549-Splatoon-2-Switch/dp/B01MSB0LJF>\n\nOttieni digitale:  \n* <https://www.nintendo.it/Giochi/Giochi-per-Nintendo-Switch/Splatoon-2-1173295.html>\n* <bittorrent://ec94decfc9b4fdf07823e8a83caebe17ee088871>"
@@ -40,6 +44,7 @@
 		"Hash": "5c39f9e83d90",
 		"Visibility": true,
 		"Obfuscation": true,
+		"NetProtection": false,
 		"Alias": [],
 		"Title": "Splatoon 3",
 		"Content": "_Solo per Nintendo Switch._\n\nAcquista fisico:  \n* <https://www.amazon.it/Nintendo-Splatoon-3/dp/B08X849HXF>\n\nOttieni digitale:  \n* <https://www.nintendo.it/Giochi/Giochi-per-Nintendo-Switch/Splatoon-3-1924751.html>\n* <bittorrent://02fe877f0e69ae46ace0544c948473ede7e01f4a>"
@@ -49,8 +54,19 @@
 		"Hash": "6319744fedf0",
 		"Visibility": true,
 		"Obfuscation": true,
+		"NetProtection": false,
 		"Alias": [],
 		"Title": "Tetris Effect",
 		"Content": "<https://www.tetriseffect.game/>\n\nPC:  \n* <https://store.steampowered.com/app/1003590/Tetris_Effect_Connected/>\n* (Linux amd64 glibc) <bittorrent://a61a2d347aca5db9ad9d816652bd3e08a0cc4401>\n\nNintendo Switch:  \n* <https://www.nintendo.it/Giochi/Giochi-scaricabili-per-Nintendo-Switch/Tetris-Effect-Connected-2018258.html>\n* (NSZ) <bittorrent://53ac9f1e38963c4c636648dd10145a798783de11>"
+	},
+	"c9ddda9d3449": {
+		"Id": "c9ddda9d3449",
+		"Hash": "4c78ba7b7089",
+		"Visibility": true,
+		"Obfuscation": true,
+		"NetProtection": true,
+		"Alias": [],
+		"Title": "Piece8 Studios",
+		"Content": "* <https://piece8studios.blogspot.com/>"
 	}
 }
