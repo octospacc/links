@@ -8,4 +8,4 @@
 # Classic Player Deluxe PocketNES ROMs
 
 * [64-in-1 Classic Player.gba](https://hlb0.octt.eu.org/Drive/Misc/PocketNES-ROMs/64-in-1%20Classic%20Player%20%28FRGT-SRNM-003%29%5BVT02%5D%5BREV1%5D%5Bforgotusername%5D.gba)
-* [86-in-1 Classic Player Deluxe.gba](86-in-1 Classic Player Deluxe (FRGT-SRNM-004)[VT02][forgotusername].gba)
+* [86-in-1 Classic Player Deluxe.gba](https://hlb0.octt.eu.org/Drive/Misc/PocketNES-ROMs/86-in-1%20Classic%20Player%20Deluxe%20%28FRGT-SRNM-004%29%5BVT02%5D%5Bforgotusername%5D.gba)
